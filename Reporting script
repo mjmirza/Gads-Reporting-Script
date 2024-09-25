@@ -7,7 +7,7 @@
  */
 
 const CONFIG = {
-  spreadsheetUrl: '', // Add your spreadsheet URL here
+  spreadsheetUrl: 'https://docs.google.com/spreadsheets/d/1XdrmBkqtJj-zr9sqPKVsinUb3MnWgwPFyNjF5MGiAF0/edit?gid=443589420#gid=443589420', // Add your spreadsheet URL here
   zombieDays: 366,
   prodDays: 181,
   emailRecipients: ['support@mirzaiqbal.com'], // Reporting email

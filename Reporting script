@@ -1,24 +1,24 @@
 /**
- * Google Ads Script for comprehensive account reporting
- * Version: 2.0
+ * Google Ads Script for comprehensive account reporting and analysis
+ * Version: 3.0
  * Last updated: 2024-09-25
  * Author: Mirza Iqbal
  * Email: support@mirzaiqbal.com
  */
 
 const CONFIG = {
-  spreadsheetUrl: '', // Add your spreadsheet URL here
+  spreadsheetUrl: "", // Add your spreadsheet URL here
   zombieDays: 366,
   prodDays: 181,
-  emailRecipients: ['example@example.com'], // Add email addresses for notifications
-  currencyCode: 'USD', // Change to your account's currency code
+  emailRecipients: ["support@mirzaiqbal.com"], // Reporting email
+  currencyCode: "USD", // Change to your account's currency code
   performanceThreshold: 0.1, // Adjust this value to set the performance threshold
-  logSheetName: 'ScriptLog' // Name of the sheet where logs will be written
+  logSheetName: "ScriptLog", // Name of the sheet where logs will be written
 };
 
 function main() {
   try {
-    Logger.log('Script execution started.');
+    Logger.log("Script execution started.");
     const ss = openSpreadsheet();
     const dateRanges = getDateRanges(CONFIG.zombieDays, CONFIG.prodDays);
     const queryElements = getQueryElements();
@@ -27,12 +27,14 @@ function main() {
 
     runReports(ss, reportMappings);
     performAdditionalAnalysis(ss);
+    suggestPerformanceImprovements(ss);
+    createCharts(ss);
     writeLogsToSheet(ss);
     sendEmailNotification();
 
-    Logger.log('Script execution completed successfully.');
+    Logger.log("Script execution completed successfully.");
   } catch (error) {
-    Logger.log('An error occurred: ' + error);
+    Logger.log("An error occurred: " + error);
     sendErrorNotification(error);
   }
 }
@@ -40,7 +42,7 @@ function main() {
 function openSpreadsheet() {
   const ss = SpreadsheetApp.openByUrl(CONFIG.spreadsheetUrl);
   if (!ss) {
-    throw new Error('Unable to open spreadsheet. Please check the URL.');
+    throw new Error("Unable to open spreadsheet. Please check the URL.");
   }
   return ss;
 }
@@ -54,65 +56,71 @@ function getDateRanges(zombieDays, prodDays) {
   const timeZone = AdsApp.currentAccount().getTimeZone();
 
   return {
-    zombieRange: `segments.date BETWEEN "${formatDate(from, timeZone)}" AND "${formatDate(to, timeZone)}"`,
-    prodDate: `segments.date BETWEEN "${formatDate(prod180, timeZone)}" AND "${formatDate(to, timeZone)}"`,
-    date30: 'segments.date DURING LAST_30_DAYS',
-    date7: 'segments.date DURING LAST_7_DAYS'
+    zombieRange: `segments.date BETWEEN "${formatDate(
+      from,
+      timeZone
+    )}" AND "${formatDate(to, timeZone)}"`,
+    prodDate: `segments.date BETWEEN "${formatDate(
+      prod180,
+      timeZone
+    )}" AND "${formatDate(to, timeZone)}"`,
+    date30: "segments.date DURING LAST_30_DAYS",
+    date7: "segments.date DURING LAST_7_DAYS",
   };
 }
 
 function formatDate(date, timeZone) {
-  return Utilities.formatDate(date, timeZone, 'yyyy-MM-dd');
+  return Utilities.formatDate(date, timeZone, "yyyy-MM-dd");
 }
 
 function getQueryElements() {
   return {
-    impr: 'metrics.impressions',
-    clicks: 'metrics.clicks',
-    cost: 'metrics.cost_micros',
-    conv: 'metrics.conversions',
-    value: 'metrics.conversions_value',
-    allConv: 'metrics.all_conversions',
-    allValue: 'metrics.all_conversions_value',
-    views: 'metrics.video_views',
-    cpv: 'metrics.average_cpv',
-    segDate: 'segments.date',
-    prodTitle: 'segments.product_title',
-    prodID: 'segments.product_item_id',
-    prodC0: 'segments.product_custom_attribute0',
-    prodC1: 'segments.product_custom_attribute1',
-    prodC2: 'segments.product_custom_attribute2',
-    prodC3: 'segments.product_custom_attribute3',
-    prodC4: 'segments.product_custom_attribute4',
-    campName: 'campaign.name',
-    chType: 'campaign.advertising_channel_type',
-    adgName: 'ad_group.name',
-    adStatus: 'ad_group_ad.status',
-    adPerf: 'ad_group_ad_asset_view.performance_label',
-    adType: 'ad_group_ad_asset_view.field_type',
-    aIdAsset: 'asset.resource_name',
-    aId: 'asset.id',
-    assetType: 'asset.type',
-    aFinalUrl: 'asset.final_urls',
-    assetName: 'asset.name',
-    assetText: 'asset.text_asset.text',
-    assetSource: 'asset.source',
-    adUrl: 'asset.image_asset.full_size.url',
-    ytTitle: 'asset.youtube_video_asset.youtube_video_title',
-    ytId: 'asset.youtube_video_asset.youtube_video_id',
-    agId: 'asset_group.id',
-    assetFtype: 'asset_group_asset.field_type',
-    adPmaxPerf: 'asset_group_asset.performance_label',
-    agStrength: 'asset_group.ad_strength',
-    agStatus: 'asset_group.status',
-    asgName: 'asset_group.name',
-    lgType: 'asset_group_listing_group_filter.type',
-    aIdCamp: 'segments.asset_interaction_target.asset',
-    interAsset: 'segments.asset_interaction_target.interaction_on_this_asset',
-    ctr: 'metrics.ctr',
-    avgCpc: 'metrics.average_cpc',
-    convRate: 'metrics.conv_rate',
-    roas: 'metrics.roas'
+    impr: "metrics.impressions",
+    clicks: "metrics.clicks",
+    cost: "metrics.cost_micros",
+    conv: "metrics.conversions",
+    value: "metrics.conversions_value",
+    allConv: "metrics.all_conversions",
+    allValue: "metrics.all_conversions_value",
+    views: "metrics.video_views",
+    cpv: "metrics.average_cpv",
+    segDate: "segments.date",
+    prodTitle: "segments.product_title",
+    prodID: "segments.product_item_id",
+    prodC0: "segments.product_custom_attribute0",
+    prodC1: "segments.product_custom_attribute1",
+    prodC2: "segments.product_custom_attribute2",
+    prodC3: "segments.product_custom_attribute3",
+    prodC4: "segments.product_custom_attribute4",
+    campName: "campaign.name",
+    chType: "campaign.advertising_channel_type",
+    adgName: "ad_group.name",
+    adStatus: "ad_group_ad.status",
+    adPerf: "ad_group_ad_asset_view.performance_label",
+    adType: "ad_group_ad_asset_view.field_type",
+    aIdAsset: "asset.resource_name",
+    aId: "asset.id",
+    assetType: "asset.type",
+    aFinalUrl: "asset.final_urls",
+    assetName: "asset.name",
+    assetText: "asset.text_asset.text",
+    assetSource: "asset.source",
+    adUrl: "asset.image_asset.full_size.url",
+    ytTitle: "asset.youtube_video_asset.youtube_video_title",
+    ytId: "asset.youtube_video_asset.youtube_video_id",
+    agId: "asset_group.id",
+    assetFtype: "asset_group_asset.field_type",
+    adPmaxPerf: "asset_group_asset.performance_label",
+    agStrength: "asset_group.ad_strength",
+    agStatus: "asset_group.status",
+    asgName: "asset_group.name",
+    lgType: "asset_group_listing_group_filter.type",
+    aIdCamp: "segments.asset_interaction_target.asset",
+    interAsset: "segments.asset_interaction_target.interaction_on_this_asset",
+    ctr: "metrics.ctr",
+    avgCpc: "metrics.average_cpc",
+    convRate: "metrics.conv_rate",
+    roas: "metrics.roas",
   };
 }
 
@@ -126,21 +134,48 @@ function buildQueries(elements, dateRanges) {
     assetQuery: buildAssetQuery(elements),
     adsQuery: buildAdsQuery(elements),
     zQuery: buildZombieQuery(elements, dateRanges),
-    accountPerformanceQuery: buildAccountPerformanceQuery(elements, dateRanges)
+    accountPerformanceQuery: buildAccountPerformanceQuery(elements, dateRanges),
   };
 }
 
 function buildCampaignQuery(elements, dateRanges) {
-  const fields = [elements.segDate, elements.campName, elements.cost, elements.conv, elements.value, elements.views, elements.cpv, elements.impr, elements.clicks, elements.chType, elements.ctr, elements.avgCpc, elements.convRate, elements.roas];
-  return `SELECT ${fields.join(',')}
+  const fields = [
+    elements.segDate,
+    elements.campName,
+    elements.cost,
+    elements.conv,
+    elements.value,
+    elements.views,
+    elements.cpv,
+    elements.impr,
+    elements.clicks,
+    elements.chType,
+    elements.ctr,
+    elements.avgCpc,
+    elements.convRate,
+    elements.roas,
+  ];
+  return `SELECT ${fields.join(",")}
     FROM campaign
     WHERE ${dateRanges.date30}
     ORDER BY campaign.name`;
 }
 
 function buildDVQuery(elements, dateRanges) {
-  const fields = [elements.segDate, elements.campName, elements.aIdCamp, elements.cost, elements.conv, elements.value, elements.views, elements.cpv, elements.impr, elements.chType, elements.interAsset];
-  return `SELECT ${fields.join(',')}
+  const fields = [
+    elements.segDate,
+    elements.campName,
+    elements.aIdCamp,
+    elements.cost,
+    elements.conv,
+    elements.value,
+    elements.views,
+    elements.cpv,
+    elements.impr,
+    elements.chType,
+    elements.interAsset,
+  ];
+  return `SELECT ${fields.join(",")}
     FROM campaign
     WHERE ${dateRanges.date30}
     AND segments.asset_interaction_target.interaction_on_this_asset != "TRUE"
@@ -148,44 +183,124 @@ function buildDVQuery(elements, dateRanges) {
 }
 
 function buildProductQuery(elements, dateRanges) {
-  const fields = [elements.campName, elements.prodTitle, elements.cost, elements.conv, elements.value, elements.impr, elements.chType, elements.prodID, elements.prodC0, elements.prodC1, elements.prodC2, elements.prodC3, elements.prodC4, elements.clicks, elements.ctr, elements.avgCpc, elements.convRate, elements.roas];
-  return `SELECT ${fields.join(',')}
+  const fields = [
+    elements.campName,
+    elements.prodTitle,
+    elements.cost,
+    elements.conv,
+    elements.value,
+    elements.impr,
+    elements.chType,
+    elements.prodID,
+    elements.prodC0,
+    elements.prodC1,
+    elements.prodC2,
+    elements.prodC3,
+    elements.prodC4,
+    elements.clicks,
+    elements.ctr,
+    elements.avgCpc,
+    elements.convRate,
+    elements.roas,
+  ];
+  return `SELECT ${fields.join(",")}
     FROM shopping_performance_view
     WHERE ${dateRanges.date30}
     ORDER BY metrics.impressions DESC`;
 }
 
 function buildProduct180Query(elements, dateRanges) {
-  const fields = [elements.campName, elements.prodTitle, elements.cost, elements.conv, elements.value, elements.impr, elements.chType, elements.prodID, elements.prodC0, elements.prodC1, elements.prodC2, elements.prodC3, elements.prodC4, elements.clicks, elements.ctr, elements.avgCpc, elements.convRate, elements.roas];
-  return `SELECT ${fields.join(',')}
+  const fields = [
+    elements.campName,
+    elements.prodTitle,
+    elements.cost,
+    elements.conv,
+    elements.value,
+    elements.impr,
+    elements.chType,
+    elements.prodID,
+    elements.prodC0,
+    elements.prodC1,
+    elements.prodC2,
+    elements.prodC3,
+    elements.prodC4,
+    elements.clicks,
+    elements.ctr,
+    elements.avgCpc,
+    elements.convRate,
+    elements.roas,
+  ];
+  return `SELECT ${fields.join(",")}
     FROM shopping_performance_view
     WHERE ${dateRanges.prodDate}
     ORDER BY metrics.impressions DESC`;
 }
 
 function buildAssetGroupQuery(elements, dateRanges) {
-  const fields = [elements.segDate, elements.campName, elements.asgName, elements.agStrength, elements.agStatus, elements.lgType, elements.impr, elements.clicks, elements.cost, elements.conv, elements.value, elements.ctr, elements.avgCpc, elements.convRate, elements.roas];
-  return `SELECT ${fields.join(',')}
+  const fields = [
+    elements.segDate,
+    elements.campName,
+    elements.asgName,
+    elements.agStrength,
+    elements.agStatus,
+    elements.lgType,
+    elements.impr,
+    elements.clicks,
+    elements.cost,
+    elements.conv,
+    elements.value,
+    elements.ctr,
+    elements.avgCpc,
+    elements.convRate,
+    elements.roas,
+  ];
+  return `SELECT ${fields.join(",")}
     FROM asset_group_product_group_view
     WHERE ${dateRanges.date30}
     AND asset_group_listing_group_filter.type != "SUBDIVISION"`;
 }
 
 function buildAssetQuery(elements) {
-  const fields = [elements.aId, elements.aFinalUrl, elements.assetSource, elements.assetType, elements.ytTitle, elements.ytId, elements.assetText, elements.aIdAsset, elements.assetName];
-  return `SELECT ${fields.join(',')}
+  const fields = [
+    elements.aId,
+    elements.aFinalUrl,
+    elements.assetSource,
+    elements.assetType,
+    elements.ytTitle,
+    elements.ytId,
+    elements.assetText,
+    elements.aIdAsset,
+    elements.assetName,
+  ];
+  return `SELECT ${fields.join(",")}
     FROM asset`;
 }
 
 function buildAdsQuery(elements) {
-  const fields = [elements.campName, elements.asgName, elements.agId, elements.aIdAsset, elements.assetFtype, elements.adPmaxPerf, elements.agStrength, elements.agStatus, elements.assetSource];
-  return `SELECT ${fields.join(',')}
+  const fields = [
+    elements.campName,
+    elements.asgName,
+    elements.agId,
+    elements.aIdAsset,
+    elements.assetFtype,
+    elements.adPmaxPerf,
+    elements.agStrength,
+    elements.agStatus,
+    elements.assetSource,
+  ];
+  return `SELECT ${fields.join(",")}
     FROM asset_group_asset`;
 }
 
 function buildZombieQuery(elements, dateRanges) {
-  const fields = [elements.prodID, elements.clicks, elements.impr, elements.prodTitle, elements.cost];
-  return `SELECT ${fields.join(',')}
+  const fields = [
+    elements.prodID,
+    elements.clicks,
+    elements.impr,
+    elements.prodTitle,
+    elements.cost,
+  ];
+  return `SELECT ${fields.join(",")}
     FROM shopping_performance_view
     WHERE metrics.clicks < 1
     AND ${dateRanges.zombieRange}
@@ -193,23 +308,34 @@ function buildZombieQuery(elements, dateRanges) {
 }
 
 function buildAccountPerformanceQuery(elements, dateRanges) {
-  const fields = [elements.segDate, elements.impr, elements.clicks, elements.cost, elements.conv, elements.value, elements.ctr, elements.avgCpc, elements.convRate, elements.roas];
-  return `SELECT ${fields.join(',')}
+  const fields = [
+    elements.segDate,
+    elements.impr,
+    elements.clicks,
+    elements.cost,
+    elements.conv,
+    elements.value,
+    elements.ctr,
+    elements.avgCpc,
+    elements.convRate,
+    elements.roas,
+  ];
+  return `SELECT ${fields.join(",")}
     FROM account
     WHERE ${dateRanges.date30}`;
 }
 
 function getReportMappings(queries) {
   return [
-    { query: queries.campQuery, sheet: 'r_camp' },
-    { query: queries.dvQuery, sheet: 'r_dv' },
-    { query: queries.pQuery, sheet: 'r_prod_t' },
-    { query: queries.p180Query, sheet: 'r_prod_t_180' },
-    { query: queries.agQuery, sheet: 'r_ag' },
-    { query: queries.assetQuery, sheet: 'r_allads' },
-    { query: queries.adsQuery, sheet: 'r_ads' },
-    { query: queries.zQuery, sheet: 'zombies' },
-    { query: queries.accountPerformanceQuery, sheet: 'account_performance' }
+    { query: queries.campQuery, sheet: "r_camp" },
+    { query: queries.dvQuery, sheet: "r_dv" },
+    { query: queries.pQuery, sheet: "r_prod_t" },
+    { query: queries.p180Query, sheet: "r_prod_t_180" },
+    { query: queries.agQuery, sheet: "r_ag" },
+    { query: queries.assetQuery, sheet: "r_allads" },
+    { query: queries.adsQuery, sheet: "r_ads" },
+    { query: queries.zQuery, sheet: "zombies" },
+    { query: queries.accountPerformanceQuery, sheet: "account_performance" },
   ];
 }
 
@@ -229,25 +355,24 @@ function runReports(spreadsheet, reportMappings) {
 function performAdditionalAnalysis(spreadsheet) {
   analyzeAccountPerformance(spreadsheet);
   analyzeZombieProducts(spreadsheet);
-  // Add more analysis functions as needed
 }
 
 function analyzeAccountPerformance(spreadsheet) {
-  const sheet = spreadsheet.getSheetByName('account_performance');
+  const sheet = spreadsheet.getSheetByName("account_performance");
   if (!sheet) {
-    Logger.log('Account performance sheet not found. Skipping analysis.');
+    Logger.log("Account performance sheet not found. Skipping analysis.");
     return;
   }
 
   const data = sheet.getDataRange().getValues();
   const headers = data.shift();
-  const costIndex = headers.indexOf('Cost');
-  const convValueIndex = headers.indexOf('Conversion value');
+  const costIndex = headers.indexOf("Cost");
+  const convValueIndex = headers.indexOf("Conversion value");
 
   let totalCost = 0;
   let totalConvValue = 0;
 
-  data.forEach(row => {
+  data.forEach((row) => {
     totalCost += row[costIndex] / 1000000; // Convert micros to actual currency
     totalConvValue += row[convValueIndex];
   });
@@ -256,41 +381,129 @@ function analyzeAccountPerformance(spreadsheet) {
 
   Logger.log(`Account ROAS: ${roas.toFixed(2)}`);
   if (roas < CONFIG.performanceThreshold) {
-    Logger.log(`Warning: Account ROAS (${roas.toFixed(2)}) is below the threshold of ${CONFIG.performanceThreshold}`);
+    Logger.log(
+      `Warning: Account ROAS (${roas.toFixed(2)}) is below the threshold of ${
+        CONFIG.performanceThreshold
+      }`
+    );
   }
 }
 
 function analyzeZombieProducts(spreadsheet) {
-  const sheet = spreadsheet.getSheetByName('zombies');
+  const sheet = spreadsheet.getSheetByName("zombies");
   if (!sheet) {
-    Logger.log('Zombies sheet not found. Skipping analysis.');
+    Logger.log("Zombies sheet not found. Skipping analysis.");
     return;
   }
 
   const data = sheet.getDataRange().getValues();
   const headers = data.shift();
-  const impressionsIndex = headers.indexOf('Impressions');
-  const costIndex = headers.indexOf('Cost');
+  const impressionsIndex = headers.indexOf("Impressions");
+  const costIndex = headers.indexOf("Cost");
 
   let totalZombies = data.length;
   let totalImpressions = 0;
   let totalCost = 0;
 
-  data.forEach(row => {
+  data.forEach((row) => {
     totalImpressions += row[impressionsIndex];
     totalCost += row[costIndex] / 1000000; // Convert micros to actual currency
   });
 
   Logger.log(`Total zombie products: ${totalZombies}`);
   Logger.log(`Total impressions from zombie products: ${totalImpressions}`);
-  Logger.log(`Total cost of zombie products: ${CONFIG.currencyCode} ${totalCost.toFixed(2)}`);
+  Logger.log(
+    `Total cost of zombie products: ${CONFIG.currencyCode} ${totalCost.toFixed(
+      2
+    )}`
+  );
+}
+
+function suggestPerformanceImprovements(spreadsheet) {
+  Logger.log("Analyzing account for performance improvement suggestions...");
+
+  const campaignSheet = spreadsheet.getSheetByName("r_camp");
+  if (!campaignSheet) {
+    Logger.log("Campaign sheet not found. Skipping performance suggestions.");
+    return;
+  }
+
+  const data = campaignSheet.getDataRange().getValues();
+  const headers = data.shift();
+  const campaignNameIndex = headers.indexOf("Campaign");
+  const impressionsIndex = headers.indexOf("Impressions");
+  const clicksIndex = headers.indexOf("Clicks");
+  const conversionsIndex = headers.indexOf("Conversions");
+  const costIndex = headers.indexOf("Cost");
+
+  const suggestions = [];
+
+  data.forEach((row) => {
+    const campaignName = row[campaignNameIndex];
+    const impressions = row[impressionsIndex];
+    const clicks = row[clicksIndex];
+    const conversions = row[conversionsIndex];
+    const cost = row[costIndex] / 1000000; // Convert micros to actual currency
+
+    if (impressions > 1000 && clicks < 10) {
+      suggestions.push(
+        `Campaign "${campaignName}" has low CTR. Consider reviewing ad copy and targeting.`
+      );
+    }
+
+    if (clicks > 100 && conversions < 1) {
+      suggestions.push(
+        `Campaign "${campaignName}" has low conversion rate. Review landing pages and conversion tracking.`
+      );
+    }
+
+    if (cost > 100 && conversions < 1) {
+      suggestions.push(
+        `Campaign "${campaignName}" is spending without conversions. Consider pausing or optimizing.`
+      );
+    }
+  });
+
+  if (suggestions.length > 0) {
+    Logger.log("Performance improvement suggestions:");
+    suggestions.forEach((suggestion) => Logger.log("- " + suggestion));
+  } else {
+    Logger.log("No immediate performance improvement suggestions found.");
+  }
+}
+
+function createCharts(spreadsheet) {
+  const sheet = spreadsheet.getSheetByName("account_performance");
+  if (!sheet) {
+    Logger.log("Account performance sheet not found. Skipping chart creation.");
+    return;
+  }
+
+  const data = sheet.getDataRange().getValues();
+  const headers = data.shift();
+
+  // Create a line chart for impressions and clicks over time
+  const chart = sheet
+    .newChart()
+    .setChartType(Charts.ChartType.LINE)
+    .addRange(sheet.getRange(1, 1, data.length + 1, 3)) // Date, Impressions, Clicks
+    .setPosition(5, 5, 0, 0)
+    .setOption("title", "Impressions and Clicks Over Time")
+    .setOption("legend", { position: "bottom" })
+    .build();
+
+  sheet.insertChart(chart);
+
+  Logger.log("Chart created in the account_performance sheet.");
 }
 
 function writeLogsToSheet(spreadsheet) {
-  const logSheet = spreadsheet.getSheetByName(CONFIG.logSheetName) || spreadsheet.insertSheet(CONFIG.logSheetName);
-  const logs = Logger.getLog().split('\n');
+  const logSheet =
+    spreadsheet.getSheetByName(CONFIG.logSheetName) ||
+    spreadsheet.insertSheet(CONFIG.logSheetName);
+  const logs = Logger.getLog().split("\n");
   logSheet.clearContents();
-  logSheet.getRange(1, 1, logs.length, 1).setValues(logs.map(log => [log]));
+  logSheet.getRange(1, 1, logs.length, 1).setValues(logs.map((log) => [log]));
 }
 
 function sendEmailNotification() {
@@ -304,14 +517,45 @@ function sendEmailNotification() {
     
     This is an automated notification. Do not reply to this email.
   `;
-  
+
   MailApp.sendEmail({
-    to: CONFIG.emailRecipients.join(','),
+    to: CONFIG.emailRecipients.join(","),
     subject: subject,
-    body: body
+    body: body,
   });
 }
 
 function sendErrorNotification(error) {
   const accountName = AdsApp.currentAccount().getName();
-  const subject = `Error in Google Ads Script Execution - ${accountName
+  const subject = `Error in Google Ads Script Execution - ${accountName}`;
+  const body = `
+    An error occurred while executing the Google Ads script for account ${accountName}.
+    
+    Error details:
+    ${error.toString()}
+    
+    Please check the Google Sheet and the script for any issues:
+    ${CONFIG.spreadsheetUrl}
+    
+    This is an automated notification. Do not reply to this email.
+  `;
+
+  MailApp.sendEmail({
+    to: CONFIG.emailRecipients.join(","),
+    subject: subject,
+    body: body,
+  });
+}
+
+// Helper functions
+function formatCurrency(amount) {
+  return Utilities.formatCurrency(amount, CONFIG.currencyCode);
+}
+
+function calculatePercentageChange(oldValue, newValue) {
+  if (oldValue === 0) return newValue === 0 ? 0 : 100;
+  return ((newValue - oldValue) / oldValue) * 100;
+}
+
+// Execute the main function
+main();
